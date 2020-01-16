@@ -11,15 +11,20 @@ post_url = os.environ['POST_URL']
 
 id_list = []
 
-def print_dataframe_information(df_place, df_address, df_contact):
-	print(df_place.info()) # Informations about DataFrame
-	print(df_place) # DataFrame
+def post_action(url, headers, json):
+	try:
+		post = requests.post(post_url + '/' + url + '/', headers=headers, json=res_place)
+	except:
+		print(url + ' URL cannot be reached')
 
-	print(df_address.info()) # Informations about DataFrame
-	print(df_address) # DataFrame
+def transform_json(dataframe):
+	response = dataframe.to_json(orient='records', force_ascii=False)
+	response = response.replace("\/", "/")
+	return response
 
-	print(df_contact.info()) # Informations about DataFrame
-	print(df_contact) # DataFrame
+def print_dataframe_information(dataframe):
+	print(dataframe.info()) # Informations about DataFrame
+	print(dataframe) # DataFrame
 
 def get_data(url, type_search):
 	
@@ -153,17 +158,16 @@ def get_data(url, type_search):
 		'phone': phone_list
 		})
 
-	res_place = df_place.to_json(orient='records', force_ascii=False)
-	res_place = res_place.replace("\/", "/")
+	res_place = transform_json(df_place)
 
-	res_address = df_address.to_json(orient='records', force_ascii=False)
-	res_address = res_address.replace("\/", "/")
+	res_address = transform_json(df_address)
 
-	res_contact = df_contact.to_json(orient='records', force_ascii=False)
-	res_contact = res_contact.replace("\/", "/")
+	res_contact = transform_json(df_contact)
 
-	# Uncomment this line below for printing Dataframe information and content
-	print_dataframe_information(df_place, df_address, df_contact)
+	# Uncomment those lines below for printing Dataframe information and content
+	print_dataframe_information(df_place)
+	print_dataframe_information(df_address)
+	print_dataframe_information(df_contact)
 
 	# Get access
 	try:
@@ -176,20 +180,9 @@ def get_data(url, type_search):
 		print('Token URL cannot be reached')
 
 	# Post into database
-	try:
-		place_post = requests.post(post_url + '/place/', headers=headers, json=res_place)
-	except:
-		print('Place URL cannot be reached')
-
-	try:
-		address_post = requests.post(post_url + '/address/', headers=headers, json=res_address)
-	except:
-		print('Address URL cannot be reached')		
-
-	try:
-		contact_post = requests.post(post_url + '/contact/', headers=headers, json=res_contact)
-	except:
-		print('Contact URL cannot be reached')				
+	post_action(place, headers, res_place)
+	post_action(address, headers, res_address)
+	post_action(contact, headers, res_contact)				
 
 	# Go to next page if exists
 	if ('next_page_token' in main_data):
